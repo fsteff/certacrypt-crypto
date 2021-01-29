@@ -35,6 +35,10 @@ class DefaultCrypto {
     hasKey(id) {
         return this.keys.has(id);
     }
+    getKey(id) {
+        var _a;
+        return (_a = this.keys.get(id)) === null || _a === void 0 ? void 0 : _a.key;
+    }
     encrypt(plaintext, keydef, key) {
         if (!key) {
             const kd = this.keys.get(keydef.id);

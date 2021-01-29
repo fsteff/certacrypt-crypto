@@ -5,6 +5,7 @@ export interface ICrypto {
     registerKey(key: Buffer, def: KeyDef)
     unregisterKey(id: string)
     hasKey(id: string): boolean
+    getKey(id: string): Buffer | undefined
     encrypt(plaintext: Buffer, keydef: KeyDef, key?: Buffer): Buffer
     decrypt(ciphertext: Buffer, keydef: KeyDef, key?: Buffer): Buffer
     generateEncryptionKey(algo: Cipher): Buffer
@@ -24,6 +25,10 @@ export class DefaultCrypto implements ICrypto{
 
     hasKey(id: string) {
         return this.keys.has(id)
+    }
+
+    getKey(id: string) {
+        return this.keys.get(id)?.key
     }
 
     encrypt(plaintext: Buffer, keydef: KeyDef, key?: Buffer) {
