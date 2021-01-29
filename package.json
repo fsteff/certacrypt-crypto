@@ -1,0 +1,22 @@
+{
+  "name": "certacrypt-crypto",
+  "version": "0.0.1",
+  "description": "Default Crypto Module for CertaCrypt",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fsteff/certacrypt-crypto.git"
+  },
+  "author": "Stefan Fixl (Fsteff)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/fsteff/certacrypt-crypto/issues"
+  },
+  "homepage": "https://github.com/fsteff/certacrypt-crypto#readme",
+  "dependencies": {
+    "sodium-native": "^3.2.0"
+  }
+}
