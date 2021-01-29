@@ -19,10 +19,10 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Crypto = void 0;
+exports.DefaultCrypto = void 0;
 const Primitives = __importStar(require("./lib/primitives"));
 const Key_1 = require("./lib/Key");
-class Crypto {
+class DefaultCrypto {
     constructor() {
         this.keys = new Map();
     }
@@ -32,28 +32,47 @@ class Crypto {
     unregisterKey(id) {
         this.keys.delete(id);
     }
-    encrypt(plaintext, key, def) {
-        switch (def.type) {
+    hasKey(id) {
+        return this.keys.has(id);
+    }
+    encrypt(plaintext, keydef, key) {
+        if (!key) {
+            const kd = this.keys.get(keydef.id);
+            key = kd === null || kd === void 0 ? void 0 : kd.key;
+            if ((kd === null || kd === void 0 ? void 0 : kd.def.type) !== keydef.type)
+                throw new Error(`Key Cipher does not match the registered one: ${kd === null || kd === void 0 ? void 0 : kd.def.type} - ${keydef.type}`);
+        }
+        if (!Buffer.isBuffer(key))
+            throw new Error(`encryption key "${keydef.id}" not found`);
+        switch (keydef.type) {
             case Key_1.Cipher.ChaCha20_Stream:
-                if (!def.nonce || typeof def.nonce !== 'number')
+                if (!keydef.nonce || typeof keydef.nonce !== 'number')
                     throw new Error('ChaCha20_Stream requires an index as nonce');
-                return Primitives.encryptBlockStream(plaintext, def.nonce, key);
+                return Primitives.encryptBlockStream(plaintext, keydef.nonce, key);
             case Key_1.Cipher.XChaCha20_Blob:
                 return Primitives.encryptBlob(plaintext, key);
             default:
-                throw new Error('Unknown encryption algorithm ID: ' + def.type);
+                throw new Error('Unknown encryption algorithm ID: ' + keydef.type);
         }
     }
-    decrypt(ciphertext, key, def) {
-        switch (def.type) {
+    decrypt(ciphertext, keydef, key) {
+        if (!key) {
+            const kd = this.keys.get(keydef.id);
+            key = kd === null || kd === void 0 ? void 0 : kd.key;
+            if ((kd === null || kd === void 0 ? void 0 : kd.def.type) !== keydef.type)
+                throw new Error(`Key Cipher does not match the registered one: ${kd === null || kd === void 0 ? void 0 : kd.def.type} - ${keydef.type}`);
+        }
+        if (!Buffer.isBuffer(key))
+            throw new Error(`decryption key "${keydef.id}" not found`);
+        switch (keydef.type) {
             case Key_1.Cipher.ChaCha20_Stream:
-                if (!def.nonce || typeof def.nonce !== 'number')
+                if (!keydef.nonce || typeof keydef.nonce !== 'number')
                     throw new Error('ChaCha20_Stream requires an index as nonce');
-                return Primitives.decryptBlockStream(ciphertext, def.nonce, key);
+                return Primitives.decryptBlockStream(ciphertext, keydef.nonce, key);
             case Key_1.Cipher.XChaCha20_Blob:
                 return Primitives.decryptBlob(ciphertext, key);
             default:
-                throw new Error('Unknown decryption algorithm ID: ' + def.type);
+                throw new Error('Unknown decryption algorithm ID: ' + keydef.type);
         }
     }
     generateEncryptionKey(algo) {
@@ -69,5 +88,5 @@ class Crypto {
         return Primitives.hash(data);
     }
 }
-exports.Crypto = Crypto;
+exports.DefaultCrypto = DefaultCrypto;
 //# sourceMappingURL=index.js.map
