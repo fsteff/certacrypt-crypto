@@ -12,6 +12,8 @@ export interface ICrypto {
     hash(data: Buffer): Buffer
 }
 
+export {KeyDef, Cipher, Primitives}
+
 export class DefaultCrypto implements ICrypto{
     private keys = new Map<string, { key: Buffer, def: KeyDef }>()
 

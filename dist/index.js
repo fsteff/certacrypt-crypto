@@ -19,9 +19,11 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.DefaultCrypto = void 0;
+exports.DefaultCrypto = exports.Primitives = exports.Cipher = void 0;
 const Primitives = __importStar(require("./lib/primitives"));
+exports.Primitives = Primitives;
 const Key_1 = require("./lib/Key");
+Object.defineProperty(exports, "Cipher", { enumerable: true, get: function () { return Key_1.Cipher; } });
 class DefaultCrypto {
     constructor() {
         this.keys = new Map();
