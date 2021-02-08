@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.hash = exports.extractEncryptionKey = exports.generateEncryptionKey = exports.decryptBlockStream = exports.encryptBlockStream = exports.decryptBlob = exports.encryptBlob = void 0;
+exports.generateUserKeyPair = exports.crypto_box_seal_open = exports.crypto_box_seal = exports.hash = exports.extractEncryptionKey = exports.generateEncryptionKey = exports.decryptBlockStream = exports.encryptBlockStream = exports.decryptBlob = exports.encryptBlob = void 0;
 const sodium_native_1 = __importDefault(require("sodium-native"));
 /**
  * XChaCha20 encryption, automatically generates a random nonce (192 Bit) and prepends it to the ciphtertext
@@ -101,4 +101,36 @@ function hash(buf) {
     return out;
 }
 exports.hash = hash;
+function crypto_box_seal(pubkey, message) {
+    if (!Buffer.isBuffer(pubkey) || pubkey.length !== sodium_native_1.default.crypto_box_PUBLICKEYBYTES) {
+        throw new Error('invalid public key: ' + (pubkey === null || pubkey === void 0 ? void 0 : pubkey.toString()));
+    }
+    const ciphertext = Buffer.allocUnsafe(sodium_native_1.default.crypto_box_SEALBYTES + message.length);
+    sodium_native_1.default.crypto_box_seal(ciphertext, message, pubkey);
+    return ciphertext;
+}
+exports.crypto_box_seal = crypto_box_seal;
+function crypto_box_seal_open(pubkey, secretkey, ciphertext) {
+    if (!Buffer.isBuffer(pubkey) || pubkey.length !== sodium_native_1.default.crypto_box_PUBLICKEYBYTES) {
+        throw new Error('invalid public key: ' + (pubkey === null || pubkey === void 0 ? void 0 : pubkey.toString()));
+    }
+    if (!Buffer.isBuffer(secretkey) || secretkey.length !== sodium_native_1.default.crypto_box_SECRETKEYBYTES) {
+        throw new Error('invalid secret key!');
+    }
+    const message = Buffer.allocUnsafe(ciphertext.length - sodium_native_1.default.crypto_box_SEALBYTES);
+    if (sodium_native_1.default.crypto_box_seal_open(message, ciphertext, pubkey, secretkey) !== 0) {
+        return null;
+    }
+    else {
+        return message;
+    }
+}
+exports.crypto_box_seal_open = crypto_box_seal_open;
+function generateUserKeyPair() {
+    const pubkey = Buffer.allocUnsafe(sodium_native_1.default.crypto_box_PUBLICKEYBYTES);
+    const secretkey = Buffer.allocUnsafe(sodium_native_1.default.crypto_box_SECRETKEYBYTES);
+    sodium_native_1.default.crypto_box_keypair(pubkey, secretkey);
+    return { pubkey, secretkey };
+}
+exports.generateUserKeyPair = generateUserKeyPair;
 //# sourceMappingURL=primitives.js.map

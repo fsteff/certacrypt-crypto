@@ -99,3 +99,37 @@ export function hash (buf: Buffer): Buffer {
   sodium.crypto_generichash(out, buf)
   return out
 }
+
+export function crypto_box_seal(pubkey: Buffer, message: Buffer): Buffer {
+  if(!Buffer.isBuffer(pubkey) || pubkey.length !== sodium.crypto_box_PUBLICKEYBYTES) {
+    throw new Error('invalid public key: ' + pubkey?.toString())
+  }
+
+  const ciphertext = Buffer.allocUnsafe(sodium.crypto_box_SEALBYTES + message.length)
+  sodium.crypto_box_seal(ciphertext, message, pubkey)
+  return ciphertext
+}
+
+export function crypto_box_seal_open(pubkey: Buffer, secretkey: Buffer, ciphertext: Buffer): Buffer | null {
+  if(!Buffer.isBuffer(pubkey) || pubkey.length !== sodium.crypto_box_PUBLICKEYBYTES) {
+    throw new Error('invalid public key: ' + pubkey?.toString())
+  }
+
+  if(!Buffer.isBuffer(secretkey) || secretkey.length !== sodium.crypto_box_SECRETKEYBYTES) {
+    throw new Error('invalid secret key!')
+  }
+
+  const message = Buffer.allocUnsafe(ciphertext.length - sodium.crypto_box_SEALBYTES)
+  if(sodium.crypto_box_seal_open(message, ciphertext, pubkey, secretkey) !== 0) {
+    return null
+  } else {
+    return message
+  }
+}
+
+export function generateUserKeyPair() {
+  const pubkey = Buffer.allocUnsafe(sodium.crypto_box_PUBLICKEYBYTES)
+  const secretkey = Buffer.allocUnsafe(sodium.crypto_box_SECRETKEYBYTES)
+  sodium.crypto_box_keypair(pubkey, secretkey)
+  return {pubkey, secretkey}
+}

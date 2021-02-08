@@ -34,6 +34,9 @@ class DefaultCrypto {
     unregisterKey(id) {
         this.keys.delete(id);
     }
+    registerUserKeyPair(pubkey, secretkey) {
+        this.userKeyPair = { pubkey, secretkey };
+    }
     hasKey(id) {
         return this.keys.has(id);
     }
@@ -92,6 +95,14 @@ class DefaultCrypto {
     }
     hash(data) {
         return Primitives.hash(data);
+    }
+    sealEnvelope(receipient, message) {
+        return Primitives.crypto_box_seal(receipient, message);
+    }
+    tryOpenEnvelope(ciphertext) {
+        if (!this.userKeyPair)
+            throw new Error('no user key pair registered');
+        return Primitives.crypto_box_seal_open(this.userKeyPair.pubkey, this.userKeyPair.secretkey, ciphertext);
     }
 }
 exports.DefaultCrypto = DefaultCrypto;
