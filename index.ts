@@ -15,6 +15,9 @@ export interface ICrypto {
 export {KeyDef, Cipher, Primitives}
 
 export class DefaultCrypto implements ICrypto{
+
+    private userKeyPair?: {pubkey: Buffer, secretkey: Buffer}
+
     private keys = new Map<string, { key: Buffer, def: KeyDef }>()
 
     registerKey(key: Buffer, def: KeyDef) {
@@ -23,6 +26,10 @@ export class DefaultCrypto implements ICrypto{
 
     unregisterKey(id: string) {
         this.keys.delete(id)
+    }
+
+    registerUserKeyPair(pubkey: Buffer, secretkey: Buffer) {
+        this.userKeyPair = {pubkey, secretkey}
     }
 
     hasKey(id: string) {
@@ -85,5 +92,14 @@ export class DefaultCrypto implements ICrypto{
 
     hash(data: Buffer) {
         return Primitives.hash(data)
+    }
+
+    sealEnvelope(receipient: Buffer, message: Buffer) : Buffer {
+        return Primitives.crypto_box_seal(receipient, message)
+    }
+
+    tryOpenEnvelope(ciphertext: Buffer) : Buffer | null {
+        if(!this.userKeyPair) throw new Error('no user key pair registered')
+        return Primitives.crypto_box_seal_open(this.userKeyPair.pubkey, this.userKeyPair.secretkey, ciphertext)
     }
 }
