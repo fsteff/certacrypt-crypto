@@ -4,7 +4,8 @@ export enum Cipher {
 }
 
 export interface KeyDef {
-    id: string
+    feed: string,
+    index: string | number
     type: Cipher
     nonce?: Buffer | number
 }

@@ -24,35 +24,36 @@ const Primitives = __importStar(require("./lib/primitives"));
 exports.Primitives = Primitives;
 const Key_1 = require("./lib/Key");
 Object.defineProperty(exports, "Cipher", { enumerable: true, get: function () { return Key_1.Cipher; } });
+const KeyCache_1 = require("./lib/KeyCache");
 class DefaultCrypto {
     constructor() {
-        this.keys = new Map();
+        this.keys = new KeyCache_1.KeyCache();
     }
     registerKey(key, def) {
-        this.keys.set(def.id, { key, def });
+        this.keys.set(def.feed, def.index, { key, def });
     }
-    unregisterKey(id) {
-        this.keys.delete(id);
+    unregisterKey(feed, index) {
+        this.keys.delete(feed, index);
     }
     registerUserKeyPair(pubkey, secretkey) {
         this.userKeyPair = { pubkey, secretkey };
     }
-    hasKey(id) {
-        return this.keys.has(id);
+    hasKey(feed, index) {
+        return !!this.keys.get(feed, index);
     }
-    getKey(id) {
+    getKey(feed, index) {
         var _a;
-        return (_a = this.keys.get(id)) === null || _a === void 0 ? void 0 : _a.key;
+        return (_a = this.keys.get(feed, index)) === null || _a === void 0 ? void 0 : _a.key;
     }
     encrypt(plaintext, keydef, key) {
         if (!key) {
-            const kd = this.keys.get(keydef.id);
+            const kd = this.keys.get(keydef.feed, keydef.index);
             key = kd === null || kd === void 0 ? void 0 : kd.key;
             if ((kd === null || kd === void 0 ? void 0 : kd.def.type) !== keydef.type)
                 throw new Error(`Key Cipher does not match the registered one: ${kd === null || kd === void 0 ? void 0 : kd.def.type} - ${keydef.type}`);
         }
         if (!Buffer.isBuffer(key))
-            throw new Error(`encryption key "${keydef.id}" not found`);
+            throw new Error(`encryption key "${keydef.feed}@${keydef.index}" not found`);
         switch (keydef.type) {
             case Key_1.Cipher.ChaCha20_Stream:
                 if (!keydef.nonce || typeof keydef.nonce !== 'number')
@@ -66,13 +67,13 @@ class DefaultCrypto {
     }
     decrypt(ciphertext, keydef, key) {
         if (!key) {
-            const kd = this.keys.get(keydef.id);
+            const kd = this.keys.get(keydef.feed, keydef.index);
             key = kd === null || kd === void 0 ? void 0 : kd.key;
             if ((kd === null || kd === void 0 ? void 0 : kd.def.type) !== keydef.type)
                 throw new Error(`Key Cipher does not match the registered one: ${kd === null || kd === void 0 ? void 0 : kd.def.type} - ${keydef.type}`);
         }
         if (!Buffer.isBuffer(key))
-            throw new Error(`decryption key "${keydef.id}" not found`);
+            throw new Error(`decryption key "${keydef.feed}@${keydef.index}" not found`);
         switch (keydef.type) {
             case Key_1.Cipher.ChaCha20_Stream:
                 if (!keydef.nonce || typeof keydef.nonce !== 'number')

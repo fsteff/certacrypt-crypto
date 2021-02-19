@@ -1,11 +1,12 @@
 import * as Primitives from './lib/primitives'
 import { KeyDef, Cipher } from './lib/Key'
+import { KeyCache } from './lib/KeyCache'
 
 export interface ICrypto {
     registerKey(key: Buffer, def: KeyDef)
-    unregisterKey(id: string)
-    hasKey(id: string): boolean
-    getKey(id: string): Buffer | undefined
+    unregisterKey(feed: string, index?: string|number)
+    hasKey(feed: string, index: string|number): boolean
+    getKey(feed: string, index: string|number): Buffer | undefined
     encrypt(plaintext: Buffer, keydef: KeyDef, key?: Buffer): Buffer
     decrypt(ciphertext: Buffer, keydef: KeyDef, key?: Buffer): Buffer
     generateEncryptionKey(algo: Cipher): Buffer
@@ -18,35 +19,35 @@ export class DefaultCrypto implements ICrypto{
 
     private userKeyPair?: {pubkey: Buffer, secretkey: Buffer}
 
-    private keys = new Map<string, { key: Buffer, def: KeyDef }>()
+    private keys = new KeyCache()
 
     registerKey(key: Buffer, def: KeyDef) {
-        this.keys.set(def.id, {key, def})
+        this.keys.set(def.feed, def.index, {key, def})
     }
 
-    unregisterKey(id: string) {
-        this.keys.delete(id)
+    unregisterKey(feed: string, index?: number | string) {
+        this.keys.delete(feed, index)
     }
 
     registerUserKeyPair(pubkey: Buffer, secretkey: Buffer) {
         this.userKeyPair = {pubkey, secretkey}
     }
 
-    hasKey(id: string) {
-        return this.keys.has(id)
+    hasKey(feed: string, index: string | number) {
+        return !!this.keys.get(feed, index)
     }
 
-    getKey(id: string) {
-        return this.keys.get(id)?.key
+    getKey(feed: string, index: string | number) {
+        return this.keys.get(feed, index)?.key
     }
 
     encrypt(plaintext: Buffer, keydef: KeyDef, key?: Buffer) {
         if(!key) {
-            const kd = this.keys.get(keydef.id)
+            const kd = this.keys.get(keydef.feed, keydef.index)
             key = kd?.key
             if(kd?.def.type !== keydef.type) throw new Error(`Key Cipher does not match the registered one: ${kd?.def.type} - ${keydef.type}`)
         }
-        if(!Buffer.isBuffer(key)) throw new Error(`encryption key "${keydef.id}" not found`)
+        if(!Buffer.isBuffer(key)) throw new Error(`encryption key "${keydef.feed}@${keydef.index}" not found`)
         switch(keydef.type) {
             case Cipher.ChaCha20_Stream:
                 if(!keydef.nonce || typeof keydef.nonce !== 'number') throw new Error('ChaCha20_Stream requires an index as nonce')
@@ -62,11 +63,11 @@ export class DefaultCrypto implements ICrypto{
 
     decrypt(ciphertext: Buffer, keydef: KeyDef, key?: Buffer) {
         if(!key) {
-            const kd = this.keys.get(keydef.id)
+            const kd = this.keys.get(keydef.feed, keydef.index)
             key = kd?.key
             if(kd?.def.type !== keydef.type) throw new Error(`Key Cipher does not match the registered one: ${kd?.def.type} - ${keydef.type}`)
         }
-        if(!Buffer.isBuffer(key)) throw new Error(`decryption key "${keydef.id}" not found`)
+        if(!Buffer.isBuffer(key)) throw new Error(`decryption key "${keydef.feed}@${keydef.index}" not found`)
         switch(keydef.type) {
             case Cipher.ChaCha20_Stream:
                 if(!keydef.nonce || typeof keydef.nonce !== 'number') throw new Error('ChaCha20_Stream requires an index as nonce')

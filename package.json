@@ -1,6 +1,6 @@
 {
   "name": "certacrypt-crypto",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Default Crypto Module for CertaCrypt",
   "main": "index.js",
   "scripts": {
