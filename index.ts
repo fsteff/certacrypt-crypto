@@ -1,12 +1,14 @@
 import * as Primitives from './lib/primitives'
 import { KeyDef, Cipher } from './lib/Key'
-import { KeyCache } from './lib/KeyCache'
+import { KeyCache, KeyEntry, PublicEntry } from './lib/KeyCache'
 
 export interface ICrypto {
     registerKey(key: Buffer, def: KeyDef)
     unregisterKey(feed: string, index?: string|number)
+    registerPublic(feed: string, index: string|number)
+    unregisterPublic(feed: string, index?: string|number)
     hasKey(feed: string, index: string|number): boolean
-    getKey(feed: string, index: string|number): Buffer | undefined
+    getKey(feed: string, index: string|number): Buffer | null
     encrypt(plaintext: Buffer, keydef: KeyDef, key?: Buffer): Buffer
     decrypt(ciphertext: Buffer, keydef: KeyDef, key?: Buffer): Buffer
     generateEncryptionKey(algo: Cipher): Buffer
@@ -29,6 +31,13 @@ export class DefaultCrypto implements ICrypto{
         this.keys.delete(feed, index)
     }
 
+    registerPublic(feed: string, index: string|number) {
+        this.keys.set(feed, index, {public: true})
+    }
+    unregisterPublic(feed: string, index?: string|number){
+        this.keys.delete(feed, index)
+    }
+
     registerUserKeyPair(pubkey: Buffer, secretkey: Buffer) {
         this.userKeyPair = {pubkey, secretkey}
     }
@@ -38,14 +47,24 @@ export class DefaultCrypto implements ICrypto{
     }
 
     getKey(feed: string, index: string | number) {
-        return this.keys.get(feed, index)?.key
+        const entry = this.keys.get(feed, index)
+        if((<KeyEntry>entry)?.key) return (<KeyEntry>entry)?.key
+        else return null
     }
 
     encrypt(plaintext: Buffer, keydef: KeyDef, key?: Buffer) {
         if(!key) {
-            const kd = this.keys.get(keydef.feed, keydef.index)
+            const res = this.keys.get(keydef.feed, keydef.index)
+            if(!res) {
+                throw new Error(`Key not found: ${keydef.feed} @ ${keydef.index}`)
+            } else if((<PublicEntry>res).public) {
+                return plaintext 
+            } 
+            const kd = <KeyEntry>res
             key = kd?.key
-            if(kd?.def.type !== keydef.type) throw new Error(`Key Cipher does not match the registered one: ${kd?.def.type} - ${keydef.type}`)
+            if(kd?.def.type !== keydef.type) {
+                throw new Error(`Key Cipher does not match the registered one: ${kd?.def.type} - ${keydef.type}`)
+            }
         }
         if(!Buffer.isBuffer(key)) throw new Error(`encryption key "${keydef.feed}@${keydef.index}" not found`)
         switch(keydef.type) {
@@ -63,9 +82,17 @@ export class DefaultCrypto implements ICrypto{
 
     decrypt(ciphertext: Buffer, keydef: KeyDef, key?: Buffer) {
         if(!key) {
-            const kd = this.keys.get(keydef.feed, keydef.index)
-            key = kd?.key
-            if(kd?.def.type !== keydef.type) throw new Error(`Key Cipher does not match the registered one: ${kd?.def.type} - ${keydef.type}`)
+            const res = this.keys.get(keydef.feed, keydef.index)
+            if(!res) {
+                throw new Error(`Key not found: ${keydef.feed} @ ${keydef.index}`)
+            } else if((<PublicEntry>res).public) {
+                return ciphertext 
+            } 
+            const kd = <KeyEntry>res
+            key = kd.key
+            if(kd.def.type !== keydef.type) {
+                throw new Error(`Key Cipher does not match the registered one: ${kd?.def.type} - ${keydef.type}`)
+            }
         }
         if(!Buffer.isBuffer(key)) throw new Error(`decryption key "${keydef.feed}@${keydef.index}" not found`)
         switch(keydef.type) {

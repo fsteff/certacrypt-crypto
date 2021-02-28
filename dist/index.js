@@ -35,6 +35,12 @@ class DefaultCrypto {
     unregisterKey(feed, index) {
         this.keys.delete(feed, index);
     }
+    registerPublic(feed, index) {
+        this.keys.set(feed, index, { public: true });
+    }
+    unregisterPublic(feed, index) {
+        this.keys.delete(feed, index);
+    }
     registerUserKeyPair(pubkey, secretkey) {
         this.userKeyPair = { pubkey, secretkey };
     }
@@ -42,15 +48,27 @@ class DefaultCrypto {
         return !!this.keys.get(feed, index);
     }
     getKey(feed, index) {
-        var _a;
-        return (_a = this.keys.get(feed, index)) === null || _a === void 0 ? void 0 : _a.key;
+        var _a, _b;
+        const entry = this.keys.get(feed, index);
+        if ((_a = entry) === null || _a === void 0 ? void 0 : _a.key)
+            return (_b = entry) === null || _b === void 0 ? void 0 : _b.key;
+        else
+            return null;
     }
     encrypt(plaintext, keydef, key) {
         if (!key) {
-            const kd = this.keys.get(keydef.feed, keydef.index);
+            const res = this.keys.get(keydef.feed, keydef.index);
+            if (!res) {
+                throw new Error(`Key not found: ${keydef.feed} @ ${keydef.index}`);
+            }
+            else if (res.public) {
+                return plaintext;
+            }
+            const kd = res;
             key = kd === null || kd === void 0 ? void 0 : kd.key;
-            if ((kd === null || kd === void 0 ? void 0 : kd.def.type) !== keydef.type)
+            if ((kd === null || kd === void 0 ? void 0 : kd.def.type) !== keydef.type) {
                 throw new Error(`Key Cipher does not match the registered one: ${kd === null || kd === void 0 ? void 0 : kd.def.type} - ${keydef.type}`);
+            }
         }
         if (!Buffer.isBuffer(key))
             throw new Error(`encryption key "${keydef.feed}@${keydef.index}" not found`);
@@ -67,10 +85,18 @@ class DefaultCrypto {
     }
     decrypt(ciphertext, keydef, key) {
         if (!key) {
-            const kd = this.keys.get(keydef.feed, keydef.index);
-            key = kd === null || kd === void 0 ? void 0 : kd.key;
-            if ((kd === null || kd === void 0 ? void 0 : kd.def.type) !== keydef.type)
+            const res = this.keys.get(keydef.feed, keydef.index);
+            if (!res) {
+                throw new Error(`Key not found: ${keydef.feed} @ ${keydef.index}`);
+            }
+            else if (res.public) {
+                return ciphertext;
+            }
+            const kd = res;
+            key = kd.key;
+            if (kd.def.type !== keydef.type) {
                 throw new Error(`Key Cipher does not match the registered one: ${kd === null || kd === void 0 ? void 0 : kd.def.type} - ${keydef.type}`);
+            }
         }
         if (!Buffer.isBuffer(key))
             throw new Error(`decryption key "${keydef.feed}@${keydef.index}" not found`);

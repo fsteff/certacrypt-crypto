@@ -1,11 +1,13 @@
 import { KeyDef } from './Key'
 
 export interface KeyEntry { key: Buffer, def: KeyDef }
+export interface PublicEntry {public: true}
+export type MaybeKeyEntry = KeyEntry | PublicEntry
 
 export class KeyCache {
-    readonly feeds = new Map<string, Map<String, KeyEntry> | RangeEntries>()
+    readonly feeds = new Map<string, Map<String, MaybeKeyEntry> | RangeEntries>()
 
-    set(feed: string, id: number | string, value: KeyEntry) {
+    set(feed: string, id: number | string, value: MaybeKeyEntry) {
         let entries = this.feeds.get(feed)
         if (typeof id === 'number') {
             if (!entries) {
@@ -17,7 +19,7 @@ export class KeyCache {
             entries.set(id, value)
         } else if (typeof id === 'string') {
             if (!entries) {
-                entries = new Map<string, KeyEntry>()
+                entries = new Map<string, MaybeKeyEntry>()
                 this.feeds.set(feed, entries)
             } else if (!(entries instanceof Map)) {
                 throw new Error(`Feed KeyCache ${feed} isn't configured for string IDs`)
@@ -28,10 +30,10 @@ export class KeyCache {
         }
     }
 
-    get(feed: string, id: number | string): KeyEntry | null {
+    get(feed: string, id: number | string): MaybeKeyEntry | null {
         const entries = this.feeds.get(feed)
         if (!entries) return null
-        return <KeyEntry>entries.get(<string & number>id)
+        return <MaybeKeyEntry>entries.get(<string & number>id)
     }
 
     delete(feed: string, id?: string | number) {
@@ -52,9 +54,9 @@ export class KeyCache {
 }
 
 class RangeEntries {
-    readonly entries = new Array<{ index: number, value: KeyEntry }>()
+    readonly entries = new Array<{ index: number, value: MaybeKeyEntry }>()
 
-    set(index: number, value: KeyEntry) {
+    set(index: number, value: MaybeKeyEntry) {
         if (typeof index !== 'number') throw new Error('RangeEntries requires a number as index')
         if (this.entries.length === 0) return this.entries.push({ index, value })
 
@@ -65,7 +67,7 @@ class RangeEntries {
         else this.entries.splice(i, 0, { index, value })
     }
 
-    get(searched: number): KeyEntry | null {
+    get(searched: number): MaybeKeyEntry | null {
         const idx = this.findIndex(searched)
         if (idx !== null) return this.entries[idx].value
         else return null
