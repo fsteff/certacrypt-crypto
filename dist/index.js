@@ -74,7 +74,7 @@ class DefaultCrypto {
             throw new Error(`encryption key "${keydef.feed}@${keydef.index}" not found`);
         switch (keydef.type) {
             case Key_1.Cipher.ChaCha20_Stream:
-                if (!keydef.nonce || typeof keydef.nonce !== 'number')
+                if (typeof keydef.nonce !== 'number')
                     throw new Error('ChaCha20_Stream requires an index as nonce');
                 return Primitives.encryptBlockStream(plaintext, keydef.nonce, key);
             case Key_1.Cipher.XChaCha20_Blob:
@@ -102,7 +102,7 @@ class DefaultCrypto {
             throw new Error(`decryption key "${keydef.feed}@${keydef.index}" not found`);
         switch (keydef.type) {
             case Key_1.Cipher.ChaCha20_Stream:
-                if (!keydef.nonce || typeof keydef.nonce !== 'number')
+                if (typeof keydef.nonce !== 'number')
                     throw new Error('ChaCha20_Stream requires an index as nonce');
                 return Primitives.decryptBlockStream(ciphertext, keydef.nonce, key);
             case Key_1.Cipher.XChaCha20_Blob:

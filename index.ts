@@ -69,7 +69,7 @@ export class DefaultCrypto implements ICrypto{
         if(!Buffer.isBuffer(key)) throw new Error(`encryption key "${keydef.feed}@${keydef.index}" not found`)
         switch(keydef.type) {
             case Cipher.ChaCha20_Stream:
-                if(!keydef.nonce || typeof keydef.nonce !== 'number') throw new Error('ChaCha20_Stream requires an index as nonce')
+                if(typeof keydef.nonce !== 'number') throw new Error('ChaCha20_Stream requires an index as nonce')
                 return Primitives.encryptBlockStream(plaintext, keydef.nonce, key)
 
             case Cipher.XChaCha20_Blob:
@@ -97,7 +97,7 @@ export class DefaultCrypto implements ICrypto{
         if(!Buffer.isBuffer(key)) throw new Error(`decryption key "${keydef.feed}@${keydef.index}" not found`)
         switch(keydef.type) {
             case Cipher.ChaCha20_Stream:
-                if(!keydef.nonce || typeof keydef.nonce !== 'number') throw new Error('ChaCha20_Stream requires an index as nonce')
+                if(typeof keydef.nonce !== 'number') throw new Error('ChaCha20_Stream requires an index as nonce')
                 return Primitives.decryptBlockStream(ciphertext, keydef.nonce, key)
 
             case Cipher.XChaCha20_Blob:
