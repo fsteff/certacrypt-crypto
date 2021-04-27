@@ -60,10 +60,11 @@ class RangeEntries {
         if (typeof index !== 'number') throw new Error('RangeEntries requires a number as index')
         if (this.entries.length === 0) return this.entries.push({ index, value })
 
-        let i = this.entries.length - 1
-        while (i > 0 && this.entries[i].index > index) i--
+        let i = this.entries.length
+        while (i > 0 && this.entries[i-1].index >= index) i--
 
-        if (i === this.entries.length - 1) this.entries.push({ index, value })
+        if (i === this.entries.length) this.entries.push({index, value})
+        else if (this.entries[i].index === index) this.entries[i].value = value
         else this.entries.splice(i, 0, { index, value })
     }
 
