@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.generateUserKeyPair = exports.crypto_box_seal_open = exports.crypto_box_seal = exports.hash = exports.extractEncryptionKey = exports.generateEncryptionKey = exports.decryptBlockStream = exports.encryptBlockStream = exports.decryptBlob = exports.encryptBlob = void 0;
+exports.validateUserSecretKey = exports.validateUserPublicKey = exports.generateUserKeyPair = exports.crypto_box_seal_open = exports.crypto_box_seal = exports.hash = exports.extractEncryptionKey = exports.generateEncryptionKey = exports.decryptBlockStream = exports.encryptBlockStream = exports.decryptBlob = exports.encryptBlob = void 0;
 const sodium_native_1 = __importDefault(require("sodium-native"));
 /**
  * XChaCha20 encryption, automatically generates a random nonce (192 Bit) and prepends it to the ciphtertext
@@ -133,4 +133,12 @@ function generateUserKeyPair() {
     return { pubkey, secretkey };
 }
 exports.generateUserKeyPair = generateUserKeyPair;
+function validateUserPublicKey(key) {
+    return Buffer.isBuffer(key) && key.length === sodium_native_1.default.crypto_box_PUBLICKEYBYTES;
+}
+exports.validateUserPublicKey = validateUserPublicKey;
+function validateUserSecretKey(key) {
+    return Buffer.isBuffer(key) && key.length === sodium_native_1.default.crypto_box_SECRETKEYBYTES;
+}
+exports.validateUserSecretKey = validateUserSecretKey;
 //# sourceMappingURL=primitives.js.map
