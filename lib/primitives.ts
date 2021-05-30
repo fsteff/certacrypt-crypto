@@ -133,3 +133,11 @@ export function generateUserKeyPair() {
   sodium.crypto_box_keypair(pubkey, secretkey)
   return {pubkey, secretkey}
 }
+
+export function validateUserPublicKey(key: Buffer) {
+  return Buffer.isBuffer(key) && key.length === sodium.crypto_box_PUBLICKEYBYTES
+}
+
+export function validateUserSecretKey(key: Buffer) {
+  return Buffer.isBuffer(key) && key.length === sodium.crypto_box_SECRETKEYBYTES
+}
