@@ -12,7 +12,10 @@ export interface ICrypto {
     encrypt(plaintext: Buffer, keydef: KeyDef, key?: Buffer): Buffer
     decrypt(ciphertext: Buffer, keydef: KeyDef, key?: Buffer): Buffer
     generateEncryptionKey(algo: Cipher): Buffer
-    hash(data: Buffer): Buffer
+    hash(data: Buffer): Buffer,
+    registerUserKeyPair(pubkey: Buffer, secretkey: Buffer),
+    sealEnvelope(receipient: Buffer, message: Buffer): Buffer,
+    tryOpenEnvelope(ciphertext: Buffer) : Buffer | null
 }
 
 export {KeyDef, Cipher, Primitives}

@@ -118,7 +118,7 @@ function crypto_box_seal_open(pubkey, secretkey, ciphertext) {
         throw new Error('invalid secret key!');
     }
     const message = Buffer.allocUnsafe(ciphertext.length - sodium_native_1.default.crypto_box_SEALBYTES);
-    if (sodium_native_1.default.crypto_box_seal_open(message, ciphertext, pubkey, secretkey) !== 0) {
+    if (!sodium_native_1.default.crypto_box_seal_open(message, ciphertext, pubkey, secretkey)) {
         return null;
     }
     else {
@@ -127,8 +127,9 @@ function crypto_box_seal_open(pubkey, secretkey, ciphertext) {
 }
 exports.crypto_box_seal_open = crypto_box_seal_open;
 function generateUserKeyPair() {
-    const pubkey = Buffer.allocUnsafe(sodium_native_1.default.crypto_box_PUBLICKEYBYTES);
-    const secretkey = Buffer.allocUnsafe(sodium_native_1.default.crypto_box_SECRETKEYBYTES);
+    // the private key has to be more secure than other secret keys (secure buffers are a limited resource)
+    const pubkey = sodium_native_1.default.sodium_malloc(sodium_native_1.default.crypto_box_PUBLICKEYBYTES);
+    const secretkey = sodium_native_1.default.sodium_malloc(sodium_native_1.default.crypto_box_SECRETKEYBYTES);
     sodium_native_1.default.crypto_box_keypair(pubkey, secretkey);
     return { pubkey, secretkey };
 }

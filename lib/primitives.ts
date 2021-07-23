@@ -120,7 +120,7 @@ export function crypto_box_seal_open(pubkey: Buffer, secretkey: Buffer, cipherte
   }
 
   const message = Buffer.allocUnsafe(ciphertext.length - sodium.crypto_box_SEALBYTES)
-  if(sodium.crypto_box_seal_open(message, ciphertext, pubkey, secretkey) !== 0) {
+  if(!sodium.crypto_box_seal_open(message, ciphertext, pubkey, secretkey)) {
     return null
   } else {
     return message
@@ -128,8 +128,9 @@ export function crypto_box_seal_open(pubkey: Buffer, secretkey: Buffer, cipherte
 }
 
 export function generateUserKeyPair() {
-  const pubkey = Buffer.allocUnsafe(sodium.crypto_box_PUBLICKEYBYTES)
-  const secretkey = Buffer.allocUnsafe(sodium.crypto_box_SECRETKEYBYTES)
+  // the private key has to be more secure than other secret keys (secure buffers are a limited resource)
+  const pubkey = sodium.sodium_malloc(sodium.crypto_box_PUBLICKEYBYTES)
+  const secretkey = sodium.sodium_malloc(sodium.crypto_box_SECRETKEYBYTES)
   sodium.crypto_box_keypair(pubkey, secretkey)
   return {pubkey, secretkey}
 }
