@@ -1,11 +1,8 @@
 {
-  "name": "certacrypt-crypto",
-  "version": "0.0.2",
+  "name": "@certacrypt/certacrypt-crypto",
+  "version": "1.0.0",
   "description": "Default Crypto Module for CertaCrypt",
   "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/fsteff/certacrypt-crypto.git"
